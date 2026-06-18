@@ -43,8 +43,23 @@ router.post("/", async (req, res) => {
       title,
       telegram_link,
       reward,
-      photo_url,
     } = req.body;
+
+    let photo_url = "";
+
+    try {
+      const username = telegram_link
+        .replace("https://t.me/", "")
+        .replace("http://t.me/", "")
+        .replace("@", "")
+        .split("/")[0];
+
+      photo_url =
+        `https://unavatar.io/telegram/${username}`;
+    } catch {
+      photo_url =
+        "https://placehold.co/200x200";
+    }
 
     const { data, error } = await supabase
       .from("featured_tasks")
@@ -53,6 +68,7 @@ router.post("/", async (req, res) => {
         telegram_link,
         reward,
         photo_url,
+        is_active: true,
       })
       .select();
 
@@ -97,6 +113,47 @@ router.delete("/:id", async (req, res) => {
 
     res.json({
       success: true,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/*
+TOGGLE ACTIVE / INACTIVE
+*/
+router.put("/:id/toggle", async (req, res) => {
+  try {
+    const taskId = req.params.id;
+
+    const { data: task } = await supabase
+      .from("featured_tasks")
+      .select("is_active")
+      .eq("id", taskId)
+      .single();
+
+    const { data, error } = await supabase
+      .from("featured_tasks")
+      .update({
+        is_active: !task.is_active,
+      })
+      .eq("id", taskId)
+      .select();
+
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
+    res.json({
+      success: true,
+      task: data,
     });
 
   } catch (error) {
