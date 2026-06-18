@@ -16,6 +16,8 @@ const referralRoute = require("./routes/referral");
 const featuredTasksRoute = require("./routes/featuredTasks");
 const taskStatusRoute = require("./routes/taskStatus");
 const claimTaskRoute = require("./routes/claimTask");
+const verifyTaskRoute = require("./routes/verifyTask");
+const verifyTaskRoute = require("./routes/verifyTask");
 
 const app = express();
 
@@ -35,6 +37,7 @@ app.use("/referral", referralRoute);
 app.use("/featured-tasks", featuredTasksRoute);
 app.use("/task-status", taskStatusRoute);
 app.use("/claim-task", claimTaskRoute);
+app.use("/verify-task", verifyTaskRoute);
 
 app.listen(process.env.PORT, () => {
   console.log(

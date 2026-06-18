@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
+const axios = require("axios");
 const supabase = require("../services/supabase");
 
 /*
@@ -39,7 +40,7 @@ router.get("/:userId/:taskId", async (req, res) => {
 });
 
 /*
-MARK USER AS JOINED
+MARK USER JOINED TASK
 POST /task-status/join
 */
 router.post("/join", async (req, res) => {
@@ -94,6 +95,70 @@ router.post("/join", async (req, res) => {
     return res.status(500).json({
       success: false,
       error: error.message,
+    });
+  }
+});
+
+/*
+VERIFY USER JOINED CHANNEL
+POST /task-status/verify
+*/
+router.post("/verify", async (req, res) => {
+  try {
+    const { user_id, task_id } = req.body;
+
+    const { data: task, error: taskError } =
+      await supabase
+        .from("featured_tasks")
+        .select("*")
+        .eq("id", task_id)
+        .single();
+
+    if (taskError || !task) {
+      return res.status(404).json({
+        success: false,
+        error: "Task not found",
+      });
+    }
+
+    const username = task.telegram_link
+      .replace("https://t.me/", "")
+      .replace("http://t.me/", "")
+      .replace("@", "")
+      .split("/")[0];
+
+    const tgRes = await axios.get(
+      `https://api.telegram.org/bot${process.env.BOT_TOKEN}/getChatMember`,
+      {
+        params: {
+          chat_id: `@${username}`,
+          user_id,
+        },
+      }
+    );
+
+    const status =
+      tgRes.data?.result?.status || "";
+
+    if (
+      status !== "member" &&
+      status !== "administrator" &&
+      status !== "creator"
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "Please join channel first",
+      });
+    }
+
+    return res.json({
+      success: true,
+      verified: true,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      error: "Please join channel first",
     });
   }
 });
