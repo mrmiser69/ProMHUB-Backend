@@ -14,6 +14,8 @@ const withdrawHistoryRoute = require("./routes/withdrawHistory");
 const adminWithdrawRoute = require("./routes/adminWithdraw");
 const referralRoute = require("./routes/referral");
 const featuredTasksRoute = require("./routes/featuredTasks");
+const taskStatusRoute = require("./routes/taskStatus");
+const claimTaskRoute = require("./routes/claimTask");
 
 const app = express();
 
@@ -31,6 +33,8 @@ app.use("/withdraw-history", withdrawHistoryRoute);
 app.use("/admin/withdrawals", adminWithdrawRoute);
 app.use("/referral", referralRoute);
 app.use("/featured-tasks", featuredTasksRoute);
+app.use("/task-status", taskStatusRoute);
+app.use("/claim-task", claimTaskRoute);
 
 app.listen(process.env.PORT, () => {
   console.log(
