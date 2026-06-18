@@ -5,6 +5,7 @@ const supabase = require("../services/supabase");
 
 /*
 CHECK TASK STATUS
+GET /task-status/:userId/:taskId
 */
 router.get("/:userId/:taskId", async (req, res) => {
   try {
@@ -24,14 +25,13 @@ router.get("/:userId/:taskId", async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
-      claimed: data?.claimed || false,
       joined: !!data,
+      claimed: data?.claimed || false,
     });
-
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message,
     });
@@ -39,35 +39,59 @@ router.get("/:userId/:taskId", async (req, res) => {
 });
 
 /*
-MARK USER JOINED TASK
+MARK USER AS JOINED
+POST /task-status/join
 */
 router.post("/join", async (req, res) => {
   try {
     const { user_id, task_id } = req.body;
 
-    const { data: existing } = await supabase
-      .from("user_task_claims")
-      .select("*")
-      .eq("user_id", user_id)
-      .eq("task_id", task_id)
-      .maybeSingle();
-
-    if (!existing) {
-      await supabase
-        .from("user_task_claims")
-        .insert({
-          user_id,
-          task_id,
-          claimed: false,
-        });
+    if (!user_id || !task_id) {
+      return res.status(400).json({
+        success: false,
+        error: "user_id and task_id are required",
+      });
     }
 
-    res.json({
-      success: true,
-    });
+    const { data: existing, error: findError } =
+      await supabase
+        .from("user_task_claims")
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("task_id", task_id)
+        .maybeSingle();
 
+    if (findError) {
+      return res.status(500).json({
+        success: false,
+        error: findError.message,
+      });
+    }
+
+    if (!existing) {
+      const { error: insertError } =
+        await supabase
+          .from("user_task_claims")
+          .insert({
+            user_id,
+            task_id,
+            claimed: false,
+          });
+
+      if (insertError) {
+        return res.status(500).json({
+          success: false,
+          error: insertError.message,
+        });
+      }
+    }
+
+    return res.json({
+      success: true,
+      joined: true,
+    });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message,
     });
