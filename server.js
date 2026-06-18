@@ -17,7 +17,6 @@ const featuredTasksRoute = require("./routes/featuredTasks");
 const taskStatusRoute = require("./routes/taskStatus");
 const claimTaskRoute = require("./routes/claimTask");
 const verifyTaskRoute = require("./routes/verifyTask");
-const verifyTaskRoute = require("./routes/verifyTask");
 
 const app = express();
 
